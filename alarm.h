@@ -459,4 +459,9 @@ namespace alarmPlay{
   void playAlarmTask(void *parameter);
   void playMidi(int pin, const int notes[][3], size_t len);
   void playAlarm(int buzzerPin);
+
+  void setupAlarm(int pin);
+  void startAlarm();
+  void stopAlarm();
+  bool isAlarmRunning();
 }

@@ -26,7 +26,7 @@ namespace RainMonitor {
                 Serial.println(" ms");
             }
 
-            vTaskDelay(pdMS_TO_TICKS(100)); // 每 100 ms 检查一次状态
+            vTaskDelay(pdMS_TO_TICKS(1000)); // 每 100 ms 检查一次状态
         }
     }
 
