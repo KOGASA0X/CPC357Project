@@ -1,6 +1,6 @@
 #include "DHT.h" // 包含用于 DHT 传感器的库 // Include library for DHT sensor
 #include "alarm.h"
-#include "network.h"
+#include "mynetwork.h"
 
 #define DHTTYPE DHT11 // 定义传感器类型为 DHT11 // Define the sensor type as DHT11
 

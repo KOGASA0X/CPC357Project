@@ -1,4 +1,4 @@
-#include "network.h"
+#include "mynetwork.h"
 
 namespace network{
   const char* WIFI_SSID = "ssid";           // 定义 WiFi SSID // Define the WiFi SSID
