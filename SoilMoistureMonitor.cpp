@@ -47,7 +47,7 @@ void setupSoilMoistureMonitor(int pin, int minVal, int maxVal) {
   xTaskCreate(
     soilMoistureTask,        // 任务函数
     "Soil Moisture Task",    // 任务名称
-    1000,                    // 栈大小
+    2000,                    // 栈大小
     NULL,                    // 参数
     1,                       // 优先级
     &soilMoistureTaskHandle  // 保存任务句柄
