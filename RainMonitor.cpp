@@ -10,6 +10,8 @@ namespace RainMonitor {
     void monitorRainTask(void *parameter) {
         while (true) {
             int raining = !digitalRead(rainPin); // 雨感应状态
+            Serial.print("Raining: ");
+            Serial.println(raining);
 
             if (raining && !isRaining) {
                 // 开始下雨，记录起始时间
