@@ -1,10 +1,9 @@
 #include "mynetwork.h"
 
 namespace network{
-  const char* WIFI_SSID = "ssid";           // 定义 WiFi SSID // Define the WiFi SSID
-  const char* WIFI_PASSWORD = "password";   // 定义 WiFi 密码 // Define the WiFi password
-  const char* MQTT_SERVER = "35.225.99.3";  // 定义 MQTT 服务器的 IP 地址 // Define the IP address of the MQTT server
-  const char* MQTT_TOPIC = "iot";           // 定义订阅的 MQTT 主题 // Define the MQTT topic for subscription
+  const char* WIFI_SSID = "0x0";           // 定义 WiFi SSID // Define the WiFi SSID
+  const char* WIFI_PASSWORD = "133064869";   // 定义 WiFi 密码 // Define the WiFi password
+  const char* MQTT_SERVER = "34.44.247.111";  // 定义 MQTT 服务器的 IP 地址 // Define the IP address of the MQTT server
   const int MQTT_PORT = 1883;               // 定义 MQTT 的非 TLS 通信端口 // Define the non-TLS communication port for MQTT
 
   WiFiClient espClient;                     // 创建 WiFi 客户端对象 // Create a WiFi client object
@@ -54,7 +53,7 @@ namespace network{
     client.setServer(MQTT_SERVER, MQTT_PORT); // 设置 MQTT 服务器和端口 // Set the MQTT server and port
   }
 
-  void mqtt_publish(const char* buffer){
+  void mqtt_publish(const char* MQTT_TOPIC,const char* buffer){
     if(!client.connected()) { // 检查 MQTT 客户端是否已连接 // Check if the MQTT client is connected
       reconnect(); // 如果未连接，调用 reconnect 函数重新连接 // Call reconnect function if not connected
     }
