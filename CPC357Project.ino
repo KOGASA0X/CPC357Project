@@ -10,6 +10,8 @@
 const int dht11Pin = 42;
 const int rainPin = 5;
 const int moisturePin = 4;
+const int userButtonPin = 3;
+const int colorLedPin = 46;
 
 const int MinMoistureValue = 5000;
 const int MaxMoistureValue = 2000;
@@ -22,6 +24,7 @@ const bool enableNetwork = false;
 void setup() {
   Serial.begin(115200);
   dht.begin();  // 初始化 DHT 传感器 // Initialize the DHT sensor
+  pinMode(userButtonPin, INPUT);
 
   initSharedResources();
   RainMonitor::setupRainMonitor(rainPin);                                                          // 初始化雨监控 // Initialize rain monitoring
@@ -31,6 +34,10 @@ void setup() {
 
 void loop() {
   delay(3000);
+  if (digitalRead(userButtonPin) != HIGH) {
+    alarmPlay::stopAlarm();
+  } 
+
   float temperature = dht.readTemperature();  // 从 DHT 传感器读取温度值 // Read temperature value from the DHT sensor
   float humidity = dht.readHumidity();
 
