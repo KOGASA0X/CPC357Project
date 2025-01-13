@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic WebSocket Message Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #message-box {
+            width: 100%;
+            height: 300px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            overflow-y: scroll;
+            background-color: #f9f9f9;
+            font-family: monospace;
+        }
+        #status {
+            margin-top: 10px;
+            font-size: 14px;
+            color: green;
+        }
+        #device-messages-box {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            overflow-y: scroll;
+            background-color: #f0f0f0;
+            font-family: monospace;
+            margin-top: 10px;
+        }
+        #chart-container {
+            width: 100%;
+            height: 400px;
+            margin-top: 20px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Dynamic WebSocket Message Viewer</h1>
+    <!-- 显示自动接收的消息 -->
+    <div id="message-box"></div>
+    <p id="status">Connecting to WebSocket...</p>
+
+    <!-- 筛选条件表单：选择设备、开始日期、结束日期、消息数量 -->
+    <form id="filter-form">
+        <label for="device-select">设备:</label>
+        <select id="device-select"></select>
+
+        <label for="start-date">开始日期:</label>
+        <input type="datetime-local" id="start-date">
+
+        <label for="end-date">结束日期:</label>
+        <input type="datetime-local" id="end-date">
+
+        <label for="limit">数量:</label>
+        <input type="number" id="limit" min="1" value="10">
+
+        <button type="button" id="fetch-data-btn">获取消息</button>
+    </form>
+
+    <!-- 返回的设备消息 -->
+    <div id="device-messages-box"></div>
+
+    <!-- 选择要在图表中显示的消息类型 -->
+    <div>
+        <label for="type-filter">消息类型:</label>
+        <select id="type-filter"></select>
+        <button type="button" id="filter-chart-btn">筛选图表</button>
+    </div>
+
+    <!-- 图表容器 -->
+    <div id="chart-container">
+        <canvas id="message-chart"></canvas>
+    </div>
+
+    <script>
+        // WebSocket 连接
+        const socket = new WebSocket('ws://' + window.location.host + '/ws/dashboard/');
+
+        // 获取页面元素
+        const messageBox = document.getElementById('message-box');
+        const status = document.getElementById('status');
+        const deviceSelect = document.getElementById('device-select');
+        const startDateInput = document.getElementById('start-date');
+        const endDateInput = document.getElementById('end-date');
+        const limitInput = document.getElementById('limit');
+        const fetchDataBtn = document.getElementById('fetch-data-btn');
+        const deviceMessagesBox = document.getElementById('device-messages-box');
+        const typeFilterSelect = document.getElementById('type-filter');
+        const filterChartBtn = document.getElementById('filter-chart-btn');
+        const ctx = document.getElementById('message-chart').getContext('2d');
+
+        // 存储最新设备列表
+        let latestData = [];
+        // 存储原始消息数据
+        let deviceMessagesRaw = [];
+        // 存储所有检测到的消息类型，便于更新下拉框
+        let allMessageTypes = new Set();
+        // Chart 实例
+        let chart;
+
+        // 连接成功
+        socket.onopen = function() {
+            status.textContent = "WebSocket connected!";
+            status.style.color = "green";
+        };
+
+        // 接收到消息
+        socket.onmessage = function(event) {
+            const message = event.data;
+            try {
+                const data = JSON.parse(message);
+
+                // 判断消息类型
+                if (Array.isArray(data)) {
+                    // 这是来自 send_device_data_periodically 的设备列表
+                    latestData = data;
+                    console.log('最新设备列表:', latestData);
+
+                    // 填充下拉选择框
+                    deviceSelect.innerHTML = '';
+                    latestData.forEach((device) => {
+                        const option = document.createElement('option');
+                        option.value = device.name;
+                        option.textContent = device.name;
+                        deviceSelect.appendChild(option);
+                    });
+
+                    // 显示原始数据到上方的 messageBox
+                    const newMessage = document.createElement('p');
+                    newMessage.textContent = message;
+                    messageBox.appendChild(newMessage);
+                    messageBox.scrollTop = messageBox.scrollHeight;
+                } else if (data.type === 'device_messages') {
+                    // 根据筛选条件返回的消息
+                    deviceMessagesBox.innerHTML = '';
+                    deviceMessagesRaw = data.data || [];
+                    allMessageTypes.clear();
+
+                    // 先统计一次所有消息类型及其正文，用于初始图表
+                    const messageCounts = {};
+                    deviceMessagesRaw.forEach(msg => {
+                        const item = document.createElement('p');
+                        item.textContent = JSON.stringify(msg);
+                        deviceMessagesBox.appendChild(item);
+
+                        // 匹配类似 [info] / [debug] 等前缀
+                        const prefixRegex = /^\[([^\]]+)\]/;
+                        const found = msg.message.match(prefixRegex);
+                        let msgType = 'unknown';
+                        if (found && found[1]) {
+                            msgType = found[1];
+                        }
+                        allMessageTypes.add(msgType);
+
+                        // 将整个消息正文都存入计数器(含前缀)，便于 "all" 情况统计
+                        if (messageCounts[msg.message]) {
+                            messageCounts[msg.message]++;
+                        } else {
+                            messageCounts[msg.message] = 1;
+                        }
+                    });
+
+                    // 更新图表
+                    updateChart(messageCounts);
+                    // 更新类型下拉框
+                    updateTypeFilter();
+                } else {
+                    console.log('其他类型消息:', data);
+                }
+            } catch (e) {
+                console.error("Error parsing message:", e);
+            }
+        };
+
+        // 连接关闭
+        socket.onclose = function() {
+            status.textContent = "WebSocket disconnected.";
+            status.style.color = "red";
+        };
+
+        // 出现错误
+        socket.onerror = function(error) {
+            console.error("WebSocket error:", error);
+            status.textContent = "WebSocket encountered an error.";
+            status.style.color = "orange";
+        };
+
+        // 点击获取消息按钮
+        fetchDataBtn.addEventListener('click', () => {
+            const deviceName = deviceSelect.value;
+            const startTime = startDateInput.value ? new Date(startDateInput.value).toISOString() : null;
+            const endTime = endDateInput.value ? new Date(endDateInput.value).toISOString() : null;
+            const limitVal = parseInt(limitInput.value) || 10;
+
+            const payload = {
+                device_name: deviceName,
+                limit: limitVal,
+            };
+            if (startTime && endTime) {
+                payload.time_range = [startTime, endTime];
+            }
+            socket.send(JSON.stringify(payload));
+        });
+
+        // 点击筛选图表按钮
+        filterChartBtn.addEventListener('click', () => {
+            const selectedType = typeFilterSelect.value;
+            if (!deviceMessagesRaw.length) return;
+
+            // 对当前收到的所有消息进行二次过滤
+            // 如果是非 "all"，则只保留匹配该类型的消息，并去除前缀后再统计正文
+            // 如果是 "all"，则保留全部消息正文(含前缀)，用于统计相同消息的分布
+            const prefixRegex = /^\[([^\]]+)\]/;
+            const filteredCounts = {};
+
+            deviceMessagesRaw.forEach(msg => {
+                const found = msg.message.match(prefixRegex);
+                let msgType = 'unknown';
+                if (found && found[1]) {
+                    msgType = found[1];
+                }
+
+                // 判断是否过滤该消息
+                if (selectedType !== 'all' && msgType !== selectedType) {
+                    return;
+                }
+
+                // 如果类型是 "all"，直接将前缀连同正文一起统计
+                // 如果是具体类型，则去除前缀，只统计正文
+                let messageText;
+                if (selectedType === 'all') {
+                    messageText = msg.message; 
+                } else {
+                    messageText = msg.message.replace(prefixRegex, '').trim();
+                }
+
+                if (filteredCounts[messageText]) {
+                    filteredCounts[messageText]++;
+                } else {
+                    filteredCounts[messageText] = 1;
+                }
+            });
+
+            updateChart(filteredCounts);
+        });
+
+        // 更新类型下拉列表
+        function updateTypeFilter() {
+            typeFilterSelect.innerHTML = '';
+
+            const allOption = document.createElement('option');
+            allOption.value = 'all';
+            allOption.textContent = '所有类型';
+            typeFilterSelect.appendChild(allOption);
+
+            allMessageTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                typeFilterSelect.appendChild(option);
+            });
+        }
+
+        // 绘制或更新图表
+        function updateChart(counts) {
+            const labels = Object.keys(counts);
+            const dataArr = Object.values(counts);
+
+            if (chart) {
+                chart.destroy();
+            }
+            chart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Message Distribution',
+                        data: dataArr,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)',
+                            'rgba(100, 150, 180, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(100, 150, 180, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: {
+                            display: true,
+                            text: 'Message Distribution'
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
