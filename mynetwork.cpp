@@ -23,15 +23,16 @@ void setup_wifi(void *parameter) {
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);  // 开始连接 WiFi // Start connecting to WiFi
 
   while (WiFi.status() != WL_CONNECTED) {  // 循环检查 WiFi 连接状态 // Loop to check WiFi connection status
-    delay(5000);                            // 每 500 毫秒检查一次 // Check every 500 milliseconds
-    Serial.print("WiFi connecting...");                     // 打印连接进度的点 // Print a dot to show connection progress
+    delay(5000);                           // 每 500 毫秒检查一次 // Check every 500 milliseconds
+    Serial.print("WiFi connecting...");    // 打印连接进度的点 // Print a dot to show connection progress
   }
 
   Serial.println("");                // 打印空行，改善输出格式 // Print an empty line for better output formatting
   Serial.println("WiFi connected");  // 打印 WiFi 已连接提示 // Print WiFi connected message
   Serial.print("IP address: ");      // 打印 IP 地址提示 // Print IP address prompt
   Serial.println(WiFi.localIP());    // 打印分配给 ESP32 的 IP 地址 // Print the IP address assigned to ESP32
-  
+
+  wifiTaskHandle = NULL;
   vTaskDelete(NULL);
 }
 
@@ -68,6 +69,18 @@ void mqtt_publish(const char *MQTT_TOPIC, const char *buffer) {
     } else {
       client.loop();                       // 处理 MQTT 客户端的后台任务 // Process MQTT client's background tasks
       client.publish(MQTT_TOPIC, buffer);  // 发布温度数据到指定的 MQTT 主题 // Publish temperature data to the specified MQTT topic
+    }
+  } else {
+
+    if (wifiTaskHandle == NULL) {
+      xTaskCreate(
+        setup_wifi,      // 任务函数 // Task function
+        "WiFi Task",     // 任务名称 // Task name
+        4096,            // 任务堆栈大小 // Task stack size
+        NULL,            // 任务参数 // Task parameter
+        1,               // 任务优先级 // Task priority
+        &wifiTaskHandle  // 任务句柄 // Task handle
+      );
     }
   }
 }
