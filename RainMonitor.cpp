@@ -1,5 +1,6 @@
 #include "RainMonitor.h"
 #include "SharedResources.h"
+#include "mynetwork.h"
 
 namespace RainMonitor {
 unsigned long rainDuration = 0;  // 累计下雨时间
@@ -13,6 +14,9 @@ void monitorRainTask(void *parameter) {
   while (true) {
     int raining = !digitalRead(rainPin);  // 雨感应状态
     if (xSemaphoreTake(serialMutex, portMAX_DELAY)) {
+        sprintf(buffer, "[Rain]%d", raining);
+        network::mqtt_publish("iot/devices/MH-RD",buffer);
+
         sprintf(buffer, "Raining: %d", raining);
         Serial.println(buffer);
 
@@ -31,6 +35,9 @@ void monitorRainTask(void *parameter) {
 
       // 输出累计时间
       if (xSemaphoreTake(serialMutex, portMAX_DELAY)) {
+        sprintf(buffer, "[RainDuration]%lu", rainDuration);
+        network::mqtt_publish("iot/devices/MH-RD",buffer);
+
         sprintf(buffer, "Rain Duration: %lu ms", rainDuration);
         Serial.println(buffer);
 

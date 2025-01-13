@@ -1,6 +1,7 @@
 #include "SoilMoistureMonitor.h"
 #include "alarm.h"  // 引入报警模块
 #include "SharedResources.h"
+#include "mynetwork.h"
 
 namespace SoilMoistureMonitor {
 
@@ -19,6 +20,9 @@ void soilMoistureTask(void *parameter) {
 
     // 打印土壤湿度
     if (xSemaphoreTake(serialMutex, portMAX_DELAY)) {
+      sprintf(buffer, "[SoilMoisture]%d", moisture);
+      network::mqtt_publish("iot/devices/MH-Moisture",buffer);
+
       sprintf(buffer, "Soil Moisture: %d%%", moisture);
       Serial.println(buffer);
 

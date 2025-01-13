@@ -13,9 +13,9 @@ namespace network{
   extern WiFiClient espClient; // 声明 WiFi 客户端对象
   extern PubSubClient client;  // 声明 MQTT 客户端对象
 
-  void setup_wifi();
+  void setup_wifi(void *parameter);
   void reconnect();
   void setup_network();
-  void mqtt_publish(const char* buffer);
+  void mqtt_publish(const char* MQTT_TOPIC, const char* buffer);
   
 }

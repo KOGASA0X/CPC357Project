@@ -26,20 +26,29 @@ void setup() {
   dht.begin();  // 初始化 DHT 传感器 // Initialize the DHT sensor
   pinMode(userButtonPin, INPUT);
 
+  network::setup_network();
+
   initSharedResources();
   RainMonitor::setupRainMonitor(rainPin);                                                          // 初始化雨监控 // Initialize rain monitoring
   SoilMoistureMonitor::setupSoilMoistureMonitor(moisturePin, MinMoistureValue, MaxMoistureValue);  // 初始化土壤湿度监控 // Initialize soil moisture monitoring
-  network::setup_network();
 }
 
 void loop() {
   delay(3000);
   if (digitalRead(userButtonPin) != HIGH) {
     alarmPlay::stopAlarm();
-  } 
+  }
 
   float temperature = dht.readTemperature();  // 从 DHT 传感器读取温度值 // Read temperature value from the DHT sensor
   float humidity = dht.readHumidity();
+
+  if (xSemaphoreTake(serialMutex, portMAX_DELAY)) {
+    sprintf(buffer, "[Temperature]%.2f", temperature);
+    network::mqtt_publish("iot/devices/DH11", buffer);
+    sprintf(buffer, "[Humidity]%.2f", humidity);
+    network::mqtt_publish("iot/devices/DH11", buffer);
+    xSemaphoreGive(serialMutex);
+  }
 
   sprintf(buffer, "Temperature: %.2f degree Celsius, Humidity: %.2f%%", temperature, humidity);
   Serial.println(buffer);  // 打印发布的温度数据 // Print the published temperature data
