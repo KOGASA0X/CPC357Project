@@ -31,6 +31,8 @@ void setup_wifi(void *parameter) {
   Serial.println("WiFi connected");  // 打印 WiFi 已连接提示 // Print WiFi connected message
   Serial.print("IP address: ");      // 打印 IP 地址提示 // Print IP address prompt
   Serial.println(WiFi.localIP());    // 打印分配给 ESP32 的 IP 地址 // Print the IP address assigned to ESP32
+  
+  vTaskDelete(NULL);
 }
 
 void reconnect() {

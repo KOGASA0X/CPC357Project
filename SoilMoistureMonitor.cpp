@@ -43,7 +43,7 @@ void soilMoistureTask(void *parameter) {
       }
     }
 
-    vTaskDelay(pdMS_TO_TICKS(3000));
+    vTaskDelay(pdMS_TO_TICKS(5000));
   }
 }
 
