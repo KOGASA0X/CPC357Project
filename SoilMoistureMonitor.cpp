@@ -1,24 +1,24 @@
 #include "SoilMoistureMonitor.h"
-#include "alarm.h"  // 引入报警模块
+#include "alarm.h"
 #include "SharedResources.h"
 #include "mynetwork.h"
 
 namespace SoilMoistureMonitor {
 
-TaskHandle_t soilMoistureTaskHandle = NULL;  // 任务句柄
-int moisturePin = -1;                        // 土壤湿度传感器引脚
-int minMoistureValue = 5000;                 // 默认最小湿度值
-int maxMoistureValue = 2000;                 // 默认最大湿度值
+TaskHandle_t soilMoistureTaskHandle = NULL;  // 任务句柄 Task handle
+int moisturePin = -1;                        // 土壤湿度传感器引脚 Soil moisture sensor pin
+int minMoistureValue = 5000;                 // 默认最小湿度值 // Default minimum humidity value
+int maxMoistureValue = 2000;                 // 默认最大湿度值 // Default maximum humidity value
 char buffer[128] = ""; 
 
-// 土壤湿度监控任务
+// 土壤湿度监控任务 Soil moisture monitoring task
 void soilMoistureTask(void *parameter) {
   while (true) {
-    // 读取并计算湿度百分比
+    // 读取并计算湿度百分比 Read and calculate humidity percentage
     int moistureValue = analogRead(moisturePin);
     int moisture = map(moistureValue, minMoistureValue, maxMoistureValue, 0, 100);
 
-    // 打印土壤湿度
+    // 打印土壤湿度 Print soil moisture
     if (xSemaphoreTake(serialMutex, portMAX_DELAY)) {
       sprintf(buffer, "[SoilMoisture]%d", moisture);
       network::mqtt_publish("iot/devices/MH-Moisture",buffer);
@@ -26,15 +26,15 @@ void soilMoistureTask(void *parameter) {
       sprintf(buffer, "Soil Moisture: %d%%", moisture);
       Serial.println(buffer);
 
-      xSemaphoreGive(serialMutex);  // 释放互斥量
+      xSemaphoreGive(serialMutex);  // 释放互斥量 Release mutex
     }
 
-    // 如果湿度超过 100%，触发报警
+    // 如果湿度超过 100%，触发报警 If the humidity exceeds 100%, trigger an alarm
     if (moisture > 100) {
       if (xSemaphoreTake(serialMutex, portMAX_DELAY)) {
         Serial.println("Warning: Soil moisture exceeds 100%!");
 
-        xSemaphoreGive(serialMutex);  // 释放互斥量
+        xSemaphoreGive(serialMutex);  // 释放互斥量 Release mutex
       }
       alarmPlay::startAlarm();
     } else {
@@ -47,7 +47,7 @@ void soilMoistureTask(void *parameter) {
   }
 }
 
-// 初始化土壤湿度监控
+// 初始化土壤湿度监控 Initialize soil moisture monitoring
 void setupSoilMoistureMonitor(int pin, int minVal, int maxVal) {
   moisturePin = pin;
   minMoistureValue = minVal;
@@ -55,14 +55,14 @@ void setupSoilMoistureMonitor(int pin, int minVal, int maxVal) {
 
   pinMode(moisturePin, INPUT);
 
-  // 创建土壤湿度监控任务
+  // 创建土壤湿度监控任务 Create soil moisture monitoring task
   xTaskCreate(
-    soilMoistureTask,        // 任务函数
-    "Soil Moisture Task",    // 任务名称
-    4096,                    // 栈大小
-    NULL,                    // 参数
-    1,                       // 优先级
-    &soilMoistureTaskHandle  // 保存任务句柄
+    soilMoistureTask,        // 任务函数 Task function
+    "Soil Moisture Task",    // 任务名称 Task name
+    4096,                    // 栈大小  Stack size
+    NULL,                    // 参数 Parameters
+    1,                       // 优先级 Priority
+    &soilMoistureTaskHandle  // 保存任务句柄 Save task handle
   );
 }
 
