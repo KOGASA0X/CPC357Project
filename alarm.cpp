@@ -38,12 +38,12 @@ void setupAlarm(int pin) {
 void startAlarm() {
   if (alarmTaskHandle == NULL) {
     xTaskCreate(
-      playAlarmTask,    // 任务函数
-      "Alarm Task",     // 任务名称
-      1000,             // 栈大小
-      NULL,             // 参数
-      1,                // 优先级
-      &alarmTaskHandle  // 保存任务句柄
+      playAlarmTask,    // 任务函数 Task function
+      "Alarm Task",     // 任务名称 Task name
+      1000,             // 栈大小 Stack size
+      NULL,             // 参数 Parameter
+      1,                // 优先级 Priority
+      &alarmTaskHandle  // 保存任务句柄 Save the task handle
     );
     Serial.println("Alarm started.");
   } else {
@@ -52,9 +52,9 @@ void startAlarm() {
 }
 void stopAlarm() {
   if (alarmTaskHandle != NULL) {
-    vTaskDelete(alarmTaskHandle);  // 删除任务
+    vTaskDelete(alarmTaskHandle);  // 删除任务 Delete the task
     alarmTaskHandle = NULL;
-    noTone(buzzerPin);  // 确保蜂鸣器停止
+    noTone(buzzerPin);  // 确保蜂鸣器停止 Ensure the buzzer stops
     Serial.println("Alarm stopped.");
   } else {
     Serial.println("Alarm is not running.");
@@ -62,10 +62,10 @@ void stopAlarm() {
 }
 bool isAlarmRunning() {
   if (alarmTaskHandle != NULL) {
-    eTaskState state = eTaskGetState(alarmTaskHandle);  // 获取任务状态
-    return (state == eRunning || state == eReady);      // 判断任务是否处于运行或就绪状态
+    eTaskState state = eTaskGetState(alarmTaskHandle);  // 获取任务状态 Get the task state
+    return (state == eRunning || state == eReady);      // 判断任务是否处于运行或就绪状态 Determine if the task is running or ready
   }
-  return false;  // 如果任务句柄为空，任务未运行
+  return false;  // 如果任务句柄为空，任务未运行 If the task handle is empty, the task is not running
 }
 
 }

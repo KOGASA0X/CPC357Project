@@ -10,8 +10,8 @@ namespace network{
   extern const char* MQTT_TOPIC;
   extern const int MQTT_PORT;
 
-  extern WiFiClient espClient; // 声明 WiFi 客户端对象
-  extern PubSubClient client;  // 声明 MQTT 客户端对象
+  extern WiFiClient espClient; // 声明 WiFi 客户端对象 // Declare WiFi client object
+  extern PubSubClient client;  // 声明 MQTT 客户端对象 // Declare MQTT client object
 
   void setup_wifi(void *parameter);
   void reconnect();

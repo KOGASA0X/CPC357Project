@@ -51,12 +51,12 @@ void reconnect() {
 
 void setup_network() {
   xTaskCreate(
-    setup_wifi,      // 任务函数
-    "WiFi Task",     // 任务名称
-    4096,            // 任务堆栈大小
-    NULL,            // 任务参数
-    1,               // 任务优先级
-    &wifiTaskHandle  // 任务句柄
+    setup_wifi,      // 任务函数 // Task function
+    "WiFi Task",     // 任务名称 // Task name
+    4096,            // 任务堆栈大小 // Task stack size
+    NULL,            // 任务参数 // Task parameter
+    1,               // 任务优先级 // Task priority
+    &wifiTaskHandle  // 任务句柄 // Task handle
   );
   client.setServer(MQTT_SERVER, MQTT_PORT);  // 设置 MQTT 服务器和端口 // Set the MQTT server and port
 }
