@@ -9,7 +9,7 @@ TaskHandle_t soilMoistureTaskHandle = NULL;  // 任务句柄 Task handle
 int moisturePin = -1;                        // 土壤湿度传感器引脚 Soil moisture sensor pin
 int minMoistureValue = 5000;                 // 默认最小湿度值 // Default minimum humidity value
 int maxMoistureValue = 2000;                 // 默认最大湿度值 // Default maximum humidity value
-char buffer[128] = ""; 
+char buffer[128] = "";
 
 // 土壤湿度监控任务 Soil moisture monitoring task
 void soilMoistureTask(void *parameter) {
@@ -21,7 +21,7 @@ void soilMoistureTask(void *parameter) {
     // 打印土壤湿度 Print soil moisture
     if (xSemaphoreTake(serialMutex, portMAX_DELAY)) {
       sprintf(buffer, "[SoilMoisture]%d", moisture);
-      network::mqtt_publish("iot/devices/MH-Moisture",buffer);
+      network::mqtt_publish("iot/devices/MH-Moisture", buffer);
 
       sprintf(buffer, "Soil Moisture: %d%%", moisture);
       Serial.println(buffer);

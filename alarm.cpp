@@ -62,8 +62,7 @@ void stopAlarm() {
 }
 bool isAlarmRunning() {
   if (alarmTaskHandle != NULL) {
-    eTaskState state = eTaskGetState(alarmTaskHandle);  // 获取任务状态 Get the task state
-    return (state == eRunning || state == eReady);      // 判断任务是否处于运行或就绪状态 Determine if the task is running or ready
+    return true;
   }
   return false;  // 如果任务句柄为空，任务未运行 If the task handle is empty, the task is not running
 }
