@@ -61,5 +61,4 @@ db.sqlite3
 media
 
 # Django migrations
-*/migrations/*
-iot_platform/devices/migrations/*
+*/*/migrations/*
