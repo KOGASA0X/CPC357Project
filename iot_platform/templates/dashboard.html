@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic WebSocket Message Viewer</title>
+    <title>CPC357 Green Roof Monitoring System  Dynamic WebSocket Message Viewer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -21,7 +21,7 @@
             font-family: monospace;
         }
 
-        /* 设备状态表样式 */
+        /* Device Status Table Styles */
         #device-status-table {
             width: 100%;
             border-collapse: collapse;
@@ -55,7 +55,7 @@
         #parent-container {
             display: flex;
             justify-content: space-between;
-            /* 可选：在容器之间添加空间 */
+            /* Optional: Add spacing between containers */
         }
 
         #chart-container {
@@ -64,24 +64,24 @@
             margin-top: 20px;
         }
 
-        /* 额外的图表容器样式（可根据需要自定义） */
+        /* Additional chart container styles (customize as needed) */
         .chart-wrapper {
             width: 100%;
             height: 400px;
             margin-top: 20px;
         }
     </style>
-    <!-- 引入 Chart.js -->
+    <!-- Include Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
-    <h1>Dynamic WebSocket Message Viewer</h1>
+    <h1>CPC357 Green Roof Monitoring System  Dynamic WebSocket Message Viewer</h1>
 
-    <!-- 显示自动接收的消息 -->
+    <!-- Display automatically received messages -->
     <div id="message-box"></div>
 
-    <!-- 设备状态表 -->
+    <!-- Device Status Table -->
     <table id="device-status-table">
         <thead>
             <tr>
@@ -94,56 +94,56 @@
 
     <p id="status">Connecting to WebSocket...</p>
 
-    <!-- 筛选条件表单：选择设备、开始日期、结束日期、消息数量 -->
+    <!-- Filter form: select device, start/end date, message limit -->
     <form id="filter-form">
-        <label for="device-select">设备:</label>
+        <label for="device-select">Device:</label>
         <select id="device-select"></select>
 
-        <label for="start-date">开始日期:</label>
+        <label for="start-date">Start Date:</label>
         <input type="datetime-local" id="start-date">
 
-        <label for="end-date">结束日期:</label>
+        <label for="end-date">End Date:</label>
         <input type="datetime-local" id="end-date">
 
-        <label for="limit">数量:</label>
+        <label for="limit">Quantity:</label>
         <input type="number" id="limit" min="1" value="500">
 
-        <button type="button" id="fetch-data-btn">获取消息</button>
+        <button type="button" id="fetch-data-btn">Fetch Messages</button>
     </form>
 
-    <!-- 返回的设备消息 -->
+    <!-- Returned device messages -->
     <div id="device-messages-box"></div>
 
-    <!-- 选择要在图表中显示的消息类型 -->
+    <!-- Select the message type to display in the charts -->
     <div style="margin-top: 10px;">
-        <label for="type-filter">消息类型:</label>
+        <label for="type-filter">Message Type:</label>
         <select id="type-filter"></select>
-        <button type="button" id="filter-chart-btn">筛选图表</button>
+        <button type="button" id="filter-chart-btn">Filter Chart</button>
     </div>
 
-    <!-- 新增：选择时间间隔 -->
+    <!-- New: select time interval -->
     <div style="margin-top: 10px;">
-        <label for="interval-select">时间间隔:</label>
+        <label for="interval-select">Time Interval:</label>
         <select id="interval-select">
-            <option value="1">1 分</option>
-            <option value="5">5 分</option>
-            <option value="10">10 分</option>
-            <option value="30">30 分</option>
-            <option value="60">1 小时</option>
-            <option value="300">5 小时</option>
-            <option value="600">10 小时</option>
-            <option value="1440">24 小时</option>
-            <option value="1800">30 小时</option>
+            <option value="1">1 min</option>
+            <option value="5">5 min</option>
+            <option value="10">10 min</option>
+            <option value="30">30 min</option>
+            <option value="60">1 hour</option>
+            <option value="300">5 hours</option>
+            <option value="600">10 hours</option>
+            <option value="1440">24 hours</option>
+            <option value="1800">30 hours</option>
         </select>
     </div>
 
     <div id="parent-container">
-        <!-- 图表容器（原先的饼图） -->
+        <!-- Chart container (original pie chart) -->
         <div id="chart-container">
             <canvas id="message-chart"></canvas>
         </div>
 
-        <!-- 新增：折线图、条形图容器 -->
+        <!-- Newly Added: Line chart, Bar chart containers -->
         <div class="chart-wrapper">
             <canvas id="line-chart"></canvas>
         </div>
@@ -153,10 +153,10 @@
     </div>
 
     <script>
-        // WebSocket 连接
+        // WebSocket connection
         const socket = new WebSocket('ws://' + window.location.host + '/ws/dashboard/');
 
-        // 页面元素
+        // Page elements
         const messageBox = document.getElementById('message-box');
         const status = document.getElementById('status');
         const deviceSelect = document.getElementById('device-select');
@@ -169,24 +169,24 @@
         const filterChartBtn = document.getElementById('filter-chart-btn');
         const ctx = document.getElementById('message-chart').getContext('2d');
 
-        // 新增：折线图、条形图 Canvas 上下文
+        // Newly added: line chart, bar chart contexts
         const lineCtx = document.getElementById('line-chart').getContext('2d');
         const barCtx = document.getElementById('bar-chart').getContext('2d');
 
-        // 设备列表、消息、消息类型
+        // Data lists
         let latestData = [];
         let deviceMessagesRaw = [];
         let allMessageTypes = new Set();
 
-        // 记录设备最后一次收到消息的时间
+        // Record the last message time for each device
         let deviceLastMessageTime = {};
 
-        // Chart 实例
-        let chart;       // 原先的“饼图”实例
-        let lineChart;   // 新增的“折线图”实例
-        let barChart;    // 新增的“条形图”实例
+        // Chart instances
+        let chart;       // The original "pie chart"
+        let lineChart;   // Newly added "line chart"
+        let barChart;    // Newly added "bar chart"
 
-        // WebSocket事件
+        // WebSocket events
         socket.onopen = function () {
             status.textContent = "WebSocket connected!";
             status.style.color = "green";
@@ -197,12 +197,12 @@
             try {
                 const data = JSON.parse(message);
 
-                // 设备列表消息
+                // Device list message
                 if (Array.isArray(data)) {
                     latestData = data;
-                    console.log('最新设备列表:', latestData);
+                    console.log('Latest device list:', latestData);
 
-                    // 更新设备下拉
+                    // Update device dropdown
                     deviceSelect.innerHTML = '';
                     latestData.forEach((device) => {
                         const option = document.createElement('option');
@@ -210,33 +210,33 @@
                         option.textContent = device.name;
                         deviceSelect.appendChild(option);
 
-                        // 记录每个设备最后的消息时间
+                        // Record last message time
                         deviceLastMessageTime[device.name] = new Date(device.updated_at).getTime();
                     });
 
-                    // 在上方消息框中显示原始数据
+                    // Display raw data in the message box
                     const newMessage = document.createElement('p');
                     newMessage.textContent = message;
                     messageBox.appendChild(newMessage);
                     messageBox.scrollTop = messageBox.scrollHeight;
 
-                    // 每次收到新设备列表时，刷新设备状态表
+                    // Refresh device status table
                     updateDeviceStatusTable();
                 }
-                // 设备消息
+                // Device messages
                 else if (data.type === 'device_messages') {
                     deviceMessagesBox.innerHTML = '';
                     deviceMessagesRaw = data.data || [];
                     allMessageTypes.clear();
 
-                    // 收集所有消息类型 & 展示
+                    // Collect all message types & display
                     const messageCounts = {};
                     deviceMessagesRaw.forEach(msg => {
                         const item = document.createElement('p');
                         item.textContent = JSON.stringify(msg);
                         deviceMessagesBox.appendChild(item);
 
-                        // 匹配类似 [info] / [debug] 等前缀
+                        // Match prefix like [info], [debug], etc.
                         const prefixRegex = /^\[([^\]]+)\]/;
                         const found = msg.message.match(prefixRegex);
                         let msgType = 'unknown';
@@ -245,7 +245,6 @@
                         }
                         allMessageTypes.add(msgType);
 
-                        // 统计使用完整消息(含前缀) => 用于 initial "all" usage
                         if (messageCounts[msg.message]) {
                             messageCounts[msg.message]++;
                         } else {
@@ -253,17 +252,17 @@
                         }
                     });
 
-                    // 更新饼图
+                    // Update pie chart
                     updateChart(messageCounts);
 
-                    // 更新消息类型下拉
+                    // Update message type dropdown
                     updateTypeFilter();
 
-                    // 更新设备状态表
+                    // Update device status table
                     updateDeviceStatusTable();
                 }
                 else {
-                    console.log('其他类型消息:', data);
+                    console.log('Other type of message:', data);
                 }
             } catch (e) {
                 console.error("Error parsing message:", e);
@@ -281,7 +280,7 @@
             status.style.color = "orange";
         };
 
-        // “获取消息”按钮：发送请求到后端
+        // "Fetch Messages" button: send request to backend
         fetchDataBtn.addEventListener('click', () => {
             const deviceName = deviceSelect.value;
             const startTime = startDateInput.value ? new Date(startDateInput.value).toISOString() : null;
@@ -298,12 +297,12 @@
             socket.send(JSON.stringify(payload));
         });
 
-        // “筛选图表”按钮
+        // "Filter Chart" button
         filterChartBtn.addEventListener('click', () => {
             const selectedType = typeFilterSelect.value;
             if (!deviceMessagesRaw.length) return;
 
-            // 对当前消息进行类型过滤
+            // Filter messages by selected type
             const prefixRegex = /^\[([^\]]+)\]/;
             const filteredMessages = deviceMessagesRaw.filter(msg => {
                 const found = msg.message.match(prefixRegex);
@@ -311,14 +310,14 @@
                 if (found && found[1]) {
                     msgType = found[1];
                 }
-                // 如果不是选择 "all"，则只保留与 selectedType 匹配的消息
+                // If not "all", keep only messages that match the selected type
                 if (selectedType !== 'all' && msgType !== selectedType) {
                     return false;
                 }
                 return true;
             });
 
-            // 更新饼图数据
+            // Update pie chart data
             const filteredCountsForPie = {};
             filteredMessages.forEach(msg => {
                 if (filteredCountsForPie[msg.message]) {
@@ -329,24 +328,24 @@
             });
             updateChart(filteredCountsForPie);
 
-            // 获取选择的时间间隔（单位：分钟）
+            // Get the selected time interval (in minutes)
             const intervalSelect = document.getElementById('interval-select');
             const selectedInterval = parseInt(intervalSelect.value);
 
-            // 对过滤后的消息做时间分组
+            // Group filtered messages by time
             const groupedData = groupMessagesByTime(filteredMessages, selectedInterval);
 
-            // 分别更新折线图和条形图
+            // Update line chart and bar chart
             updateLineChart(groupedData);
             updateBarChart(groupedData);
         });
 
-        // 更新消息类型筛选下拉
+        // Update message type dropdown
         function updateTypeFilter() {
             typeFilterSelect.innerHTML = '';
             const allOption = document.createElement('option');
             allOption.value = 'all';
-            allOption.textContent = '所有类型';
+            allOption.textContent = 'All Types';
             typeFilterSelect.appendChild(allOption);
 
             allMessageTypes.forEach(type => {
@@ -357,7 +356,7 @@
             });
         }
 
-        // ====== 饼图更新函数 ======
+        // ====== Update Pie Chart ======
         function updateChart(counts) {
             const labels = Object.keys(counts);
             const dataArr = Object.values(counts);
@@ -399,14 +398,14 @@
                         legend: { position: 'top' },
                         title: {
                             display: true,
-                            text: 'Message Distribution'
+                            text: 'Message Distribution (Pie Chart)'
                         }
                     }
                 }
             });
         }
 
-        // ====== 折线图更新函数 ======
+        // ====== Update Line Chart ======
         function updateLineChart(groupedData) {
             if (lineChart) {
                 lineChart.destroy();
@@ -414,7 +413,7 @@
             lineChart = new Chart(lineCtx, {
                 type: 'line',
                 data: {
-                    labels: groupedData.labels,  // 时间区间
+                    labels: groupedData.labels,  // Time intervals
                     datasets: groupedData.datasets
                 },
                 options: {
@@ -423,20 +422,20 @@
                         legend: { position: 'top' },
                         title: {
                             display: true,
-                            text: '消息类型 - 时间分布（折线图）'
+                            text: 'Message Type - Time Distribution (Line Chart)'
                         }
                     },
                     scales: {
                         x: {
                             title: {
                                 display: true,
-                                text: '时间区间'
+                                text: 'Time Interval'
                             }
                         },
                         y: {
                             title: {
                                 display: true,
-                                text: '消息数'
+                                text: 'Message Count'
                             },
                             beginAtZero: true
                         }
@@ -445,7 +444,7 @@
             });
         }
 
-        // ====== 条形图更新函数 ======
+        // ====== Update Bar Chart ======
         function updateBarChart(groupedData) {
             if (barChart) {
                 barChart.destroy();
@@ -453,7 +452,7 @@
             barChart = new Chart(barCtx, {
                 type: 'bar',
                 data: {
-                    labels: groupedData.labels,   // 时间区间
+                    labels: groupedData.labels,   // Time intervals
                     datasets: groupedData.datasets.map(ds => ({
                         label: ds.label,
                         data: ds.data,
@@ -468,21 +467,21 @@
                         legend: { position: 'top' },
                         title: {
                             display: true,
-                            text: '消息类型 - 时间分布（条形图）'
+                            text: 'Message Type - Time Distribution (Bar Chart)'
                         }
                     },
                     scales: {
                         x: {
                             title: {
                                 display: true,
-                                text: '时间区间'
+                                text: 'Time Interval'
                             },
-                            stacked: false // 是否堆叠显示，可设为 true
+                            stacked: false // Set to true to display stacked bars
                         },
                         y: {
                             title: {
                                 display: true,
-                                text: '消息数'
+                                text: 'Message Count'
                             },
                             beginAtZero: true
                         }
@@ -491,13 +490,13 @@
             });
         }
 
-        // ====== 分组函数：根据时间间隔把消息进行聚合 ======
+        // ====== Grouping function: aggregate messages based on the time interval ======
         function groupMessagesByTime(messages, intervalInMinutes) {
-            // 1. 转成时间戳并记录最小、最大时间
+            // 1. Convert to timestamps and track min/max times
             let minTime = Infinity;
             let maxTime = -Infinity;
 
-            // { "msg文本": [time1, time2, ...], ... }
+            // { "msgText": [time1, time2, ...], ... }
             const messageMap = {};
 
             messages.forEach(msg => {
@@ -511,7 +510,7 @@
                 messageMap[msg.message].push(time);
             });
 
-            // 如果没有消息，直接返回空
+            // If no messages, return empty
             if (minTime === Infinity || maxTime === -Infinity) {
                 return {
                     labels: [],
@@ -519,7 +518,7 @@
                 };
             }
 
-            // 2. 生成时间区间（bin），单位毫秒
+            // 2. Generate time bins (in ms)
             const step = intervalInMinutes * 60 * 1000;
             let currentBinStart = minTime;
             const bins = [];
@@ -527,15 +526,14 @@
                 bins.push(currentBinStart);
                 currentBinStart += step;
             }
-            // bins[i], bins[i+1) 表示一个时间段
+            // bins[i], bins[i+1) represents a time segment
             bins.push(maxTime + step);
 
-            // 3. 在每个时间段统计次数
+            // 3. Count occurrences in each time segment
             const datasets = [];
             const colorPalette = generateColorPalette(Object.keys(messageMap).length);
 
             Object.entries(messageMap).forEach(([msgText, times], idx) => {
-                // 在每个 bin 中出现次数
                 const binCounts = new Array(bins.length - 1).fill(0);
                 times.forEach(t => {
                     for (let i = 0; i < bins.length - 1; i++) {
@@ -556,7 +554,7 @@
                 });
             });
 
-            // 4. 生成 x 轴标签（显示区间范围）
+            // 4. Generate x-axis labels (showing the time range)
             const labels = [];
             for (let i = 0; i < bins.length - 1; i++) {
                 const start = new Date(bins[i]);
@@ -570,12 +568,12 @@
             };
         }
 
-        // 格式化时间区间函数
+        // Format the time range for display
         function formatTimeRange(start, end) {
             return `${start.toLocaleString()} ~ ${end.toLocaleString()}`;
         }
 
-        // 简易生成调色板函数 (HSL)
+        // Simple color palette generator (HSL)
         function generateColorPalette(count) {
             const colors = [];
             for (let i = 0; i < count; i++) {
@@ -585,12 +583,12 @@
             return colors;
         }
 
-        // ====== 更新设备状态表 ======
+        // ====== Update Device Status Table ======
         function updateDeviceStatusTable() {
             const tbody = document.querySelector("#device-status-table tbody");
             const thead = document.querySelector("#device-status-table thead");
 
-            // 更新表头，添加“Last Online”列
+            // Update the header, add "Last Online" column
             thead.innerHTML = `
                 <tr>
                     <th>Device</th>
@@ -608,13 +606,13 @@
 
                 nameTd.textContent = device.name;
 
-                // 获取设备最后时间
+                // Calculate time difference
                 const lastTime = deviceLastMessageTime[device.name];
                 const currentTime = Date.now();
                 const diff = currentTime - lastTime;
 
                 if (diff > 60000) {
-                    // 超过一分钟为 Offline
+                    // Over one minute => Offline
                     statusTd.textContent = "Offline";
                     statusTd.style.color = "red";
                 } else {
@@ -622,7 +620,7 @@
                     statusTd.style.color = "green";
                 }
 
-                // 显示上次在线时间和多久之前
+                // Display last online time and how many minutes ago
                 const lastOnlineDate = new Date(lastTime).toLocaleString();
                 const minutesAgo = Math.floor(diff / 60000);
                 lastOnlineTd.textContent = `${lastOnlineDate} (${minutesAgo} minutes ago)`;
