@@ -5,6 +5,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.timezone import now, timedelta
+from dateutil import parser
 
 class DashboardConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -88,8 +89,8 @@ class DashboardConsumer(AsyncWebsocketConsumer):
             # 解析时间范围
             # Parse time range
             if time_range:
-                start_time = datetime.fromisoformat(time_range[0])
-                end_time = datetime.fromisoformat(time_range[1])
+                start_time = parser.isoparse(time_range[0])
+                end_time   = parser.isoparse(time_range[1])
                 time_range = (start_time, end_time)
 
             # 获取设备消息

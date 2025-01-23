@@ -294,6 +294,7 @@
             if (startTime && endTime) {
                 payload.time_range = [startTime, endTime];
             }
+            console.log('Sending request:', JSON.stringify(payload));
             socket.send(JSON.stringify(payload));
         });
 
